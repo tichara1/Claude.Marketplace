@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "tichara1-marketplace",
+  "description": "Personal Claude Code plugin marketplace by tichara1",
+  "owner": {
+    "name": "tichara1"
+  },
+  "plugins": [
+    {
+      "name": "split-pr",
+      "description": "Split a large feature branch into multiple smaller PRs by architectural layer (contracts, tests, infrastructure, application, pipelines) with Azure DevOps integration",
+      "category": "productivity",
+      "source": "./plugins/split-pr"
+    }
+  ]
+}

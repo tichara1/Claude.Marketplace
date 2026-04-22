@@ -1,0 +1,14 @@
+{
+  "name": "split-pr",
+  "description": "Split a large feature branch into multiple smaller PRs by architectural layer with Azure DevOps integration",
+  "author": {
+    "name": "tichara1"
+  },
+  "category": "productivity",
+  "keywords": [
+    "git",
+    "pull-request",
+    "azure-devops",
+    "code-review"
+  ]
+}
