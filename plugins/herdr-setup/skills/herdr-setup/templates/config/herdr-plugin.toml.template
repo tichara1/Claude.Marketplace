@@ -1,0 +1,157 @@
+# ============================================================================
+# TEMPLATE - not a working manifest.
+#
+# {{PLACEHOLDERS}} come from answers.json. Blocks between "# >>> module:NAME" and
+# "# <<< module:NAME" are kept only when that module was selected.
+#
+# {{ARGV}} expands to the interpreter prefix as SEPARATE argv items:
+#   Windows : "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"
+#   POSIX   : "bash"
+# `command` is an argv array with NO shell - no expansion, no quoting, no pipes.
+# Shell examples from the docs cannot be pasted in here.
+#
+# WARNING: an unknown top-level section is silently DROPPED, not rejected. A typo'd
+# section name is not an error - it just never runs. Enum values, on the other hand,
+# are validated strictly.
+# ============================================================================
+
+id = "{{PLUGIN_ID}}"
+name = "{{PLUGIN_NAME}}"
+version = "0.1.0"
+min_herdr_version = "{{MIN_HERDR_VERSION}}"
+description = "Worktree bootstrap, agent autostart, editor launchers and diff tools"
+platforms = ["{{PLATFORM}}"]
+
+# >>> module:sidebar-tokens
+# NOTE: [[startup]] runs only at SERVER START, not on plugin link. After a fresh
+# install the daemon is not running yet - start it by hand or restart the server.
+[[startup]]
+command = [{{ARGV}}, "scripts/spawn-status-daemon.{{EXT}}"]
+# <<< module:sidebar-tokens
+
+# ----------------------------------------------------------------------------
+# Actions - right click on a Space in the sidebar.
+# contexts must be one of: global, workspace, tab, pane, selection
+# ----------------------------------------------------------------------------
+
+# >>> module:editors
+[[actions]]
+id = "open-primary"
+title = "Open in {{PRIMARY_EDITOR}}"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/open-editor.{{EXT}}", "{{PRIMARY_EDITOR}}"]
+
+[[actions]]
+id = "open-secondary"
+title = "Open in {{SECONDARY_EDITOR}}"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/open-editor.{{EXT}}", "{{SECONDARY_EDITOR}}"]
+
+[[actions]]
+id = "open-files"
+title = "Reveal in file manager"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/open-editor.{{EXT}}", "{{FILEMANAGER}}"]
+# <<< module:editors
+
+# >>> module:agent-autostart
+[[actions]]
+id = "agent-here"
+title = "Start agent here"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/agent-here.{{EXT}}"]
+
+[[actions]]
+id = "dev-layout"
+title = "Dev layout: agent | shell / test"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/dev-layout.{{EXT}}"]
+# <<< module:agent-autostart
+
+# >>> module:diff-browser
+[[actions]]
+id = "changed-files"
+title = "What changed..."
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/open-pane.{{EXT}}", "diff"]
+# <<< module:diff-browser
+
+# >>> module:status-bar
+[[actions]]
+id = "attention-view"
+title = "Only agents waiting on me"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/attention-view.{{EXT}}"]
+# <<< module:status-bar
+
+# >>> module:ticket-worktree
+[[actions]]
+id = "ticket-worktree"
+title = "Worktree from ticket"
+contexts = ["workspace"]
+command = [{{ARGV}}, "scripts/ticket-worktree.{{EXT}}"]
+# <<< module:ticket-worktree
+
+# ----------------------------------------------------------------------------
+# Event hooks
+#
+# WARNING: worktree.created and workspace.created BOTH fire for the same new
+# worktree. agent-autostart skips worktrees (discriminator: data.workspace.worktree)
+# or the agent would start twice.
+# ----------------------------------------------------------------------------
+
+# >>> module:agent-autostart
+[[events]]
+on = "workspace.created"
+command = [{{ARGV}}, "scripts/agent-autostart.{{EXT}}"]
+
+[[events]]
+on = "worktree.created"
+command = [{{ARGV}}, "scripts/bootstrap-worktree.{{EXT}}"]
+# <<< module:agent-autostart
+
+# ----------------------------------------------------------------------------
+# Panes - placement must be one of: overlay, popup, split, tab, zoomed
+# ("popup" is valid even though `plugin pane open --help` omits it)
+# ----------------------------------------------------------------------------
+
+# >>> module:diff-browser
+[[panes]]
+id = "diff"
+title = "Changed files"
+placement = "popup"
+width = "92%"
+height = "88%"
+command = [{{ARGV}}, "scripts/changed-files.{{EXT}}"]
+# <<< module:diff-browser
+
+# >>> module:review
+[[panes]]
+id = "review"
+title = "Agent review"
+placement = "popup"
+width = "90%"
+height = "85%"
+command = [{{ARGV}}, "scripts/review.{{EXT}}"]
+# <<< module:review
+
+# ----------------------------------------------------------------------------
+# Link handlers - Ctrl+click on a URL.
+# These set HERDR_PLUGIN_CLICKED_URL and HERDR_PLUGIN_LINK_HANDLER_ID.
+# They need a real mouse click, so the installer can never self-test them:
+# always report them as UNVERIFIED.
+# ----------------------------------------------------------------------------
+
+# >>> module:ticket-worktree
+[[link_handlers]]
+id = "github-issue"
+title = "Worktree from GitHub issue"
+pattern = "^https://github\\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+$"
+action = "ticket-worktree"
+
+[[link_handlers]]
+id = "jira-issue"
+title = "Worktree from Jira ticket"
+pattern = "^https://{{JIRA_DOMAIN_REGEX}}/browse/[A-Z][A-Z0-9]+-[0-9]+$"
+action = "ticket-worktree"
+# <<< module:ticket-worktree

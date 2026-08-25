@@ -5,5 +5,11 @@
   "owner": {
     "name": "tichara1"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "herdr-setup",
+      "source": "./plugins/herdr-setup",
+      "description": "Interactive installer for a herdr worktree/agent workflow on Windows, macOS and WSL2. Calibrates against the installed binary instead of trusting docs, then proves the result works."
+    }
+  ]
 }

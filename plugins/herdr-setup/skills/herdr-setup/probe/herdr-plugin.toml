@@ -1,0 +1,27 @@
+id = "herdr-setup.probe"
+name = "herdr-setup calibration probe"
+version = "0.1.0"
+description = "Temporary. Dumps HERDR_* environment so the installer can learn the real event/context JSON shape. Unlink after use."
+
+# NOTE: `command` is an argv array with no shell. Each argument is a separate item.
+#
+# This manifest ships BOTH a .ps1 and a .sh entry per hook is not possible - herdr
+# runs whatever argv you give it. The installer must rewrite this file for the
+# target platform before linking, keeping only the matching interpreter lines:
+#
+#   Windows : ["powershell.exe","-NoProfile","-ExecutionPolicy","Bypass","-File","dump.ps1","<tag>"]
+#   POSIX   : ["bash","dump.sh","<tag>"]
+
+[[actions]]
+id = "dump"
+title = "herdr-setup: dump environment"
+contexts = ["workspace"]
+command = ["bash", "dump.sh", "action"]
+
+[[events]]
+on = "workspace.created"
+command = ["bash", "dump.sh", "workspace-created"]
+
+[[events]]
+on = "worktree.created"
+command = ["bash", "dump.sh", "worktree-created"]

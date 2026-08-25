@@ -1,0 +1,21 @@
+{
+  "name": "herdr-setup",
+  "description": "Interactive installer for a herdr worktree/agent workflow on Windows, macOS and WSL2. Calibrates against the installed binary instead of trusting docs, then proves the result works.",
+  "version": "0.1.0",
+  "author": {
+    "name": "tichara1"
+  },
+  "homepage": "https://github.com/tichara1/Claude.Marketplace",
+  "repository": "https://github.com/tichara1/Claude.Marketplace",
+  "license": "MIT",
+  "keywords": [
+    "herdr",
+    "worktree",
+    "terminal",
+    "multiplexer",
+    "setup",
+    "windows",
+    "macos",
+    "wsl2"
+  ]
+}

@@ -1,0 +1,245 @@
+# ============================================================================
+# TEMPLATE - not a working config.
+#
+# {{PLACEHOLDERS}} are substituted from answers.json + calibration.json.
+# Lines between "# >>> module:NAME" and "# <<< module:NAME" are kept only when
+# that module was selected; drop the whole block otherwise, markers included.
+#
+# Platform switches marked {{#win}} / {{#posix}} keep only the matching branch.
+#
+# Every non-obvious line carries a comment saying WHY. Keep them - they are the
+# difference between a workaround and a bug someone "simplifies" back in later.
+# ============================================================================
+
+onboarding = false
+
+[worktrees]
+# Forward slashes are accepted on Windows too and avoid escaping backslashes.
+directory = "{{WORKTREE_DIR}}"
+
+[terminal]
+{{#win}}
+# Full path to the shell. The Store app-execution alias under WindowsApps is
+# directly executable and is more stable than the versioned
+# WindowsApps\Microsoft.PowerShell_7.x.y.z_x64__... path, which changes on update.
+default_shell = "{{SHELL_PATH}}"
+shell_mode = "non_login"
+{{/win}}
+{{#posix}}
+# Empty means $SHELL. "auto" uses login shells on macOS so PATH from .zprofile
+# is present in new panes.
+shell_mode = "{{SHELL_MODE}}"
+{{/posix}}
+new_cwd = "follow"
+
+[theme]
+# Valid names come from `herdr --default-config`. An unknown name silently falls
+# back to the default and only shows up in reload-config diagnostics.
+name = "{{THEME}}"
+
+[session]
+resume_agents_on_restore = true
+
+[server]
+headless_cols = 160
+headless_rows = 50
+
+# ----------------------------------------------------------------------------
+# Keybindings
+# ----------------------------------------------------------------------------
+[keys]
+prefix = "{{PREFIX_KEY}}"
+
+# Default actions relocated to free their key for a custom command below.
+#
+# NOTE: on a collision the NAMED ACTION WINS and the custom command is
+# silently DISABLED. herdr only reports the clash when BOTH bindings are
+# explicit in the config - overriding a default you have not written down passes
+# as "applied" with empty diagnostics. These lines are therefore mandatory even
+# though they look redundant.
+{{RELOCATED_DEFAULTS}}
+
+{{OPTIONAL_ACTIONS}}
+
+# ----------------------------------------------------------------------------
+# Custom commands
+{{#win}}
+# On Windows these strings run through cmd.exe /d /c, so PowerShell is invoked
+# explicitly and variables use %VAR% syntax.
+{{/win}}
+# ----------------------------------------------------------------------------
+
+# >>> module:worktree
+[[keys.command]]
+key = "{{KEY_WORKTREE_NEW}}"
+type = "popup"
+command = '{{RUN}}worktree-new.{{EXT}}{{RUNEND}}'
+description = "new worktree"
+width = "70%"
+height = "40%"
+
+[[keys.command]]
+key = "{{KEY_WORKTREE_GC}}"
+type = "popup"
+command = '{{RUN}}worktree-gc.{{EXT}}{{RUNEND}}'
+description = "gc merged worktrees"
+width = "80%"
+height = "60%"
+# <<< module:worktree
+
+# >>> module:diff-browser
+[[keys.command]]
+key = "{{KEY_DIFF}}"
+type = "popup"
+command = '{{RUN}}changed-files.{{EXT}}{{RUNEND}}'
+description = "changed files vs base"
+width = "92%"
+height = "88%"
+# <<< module:diff-browser
+
+# >>> module:editors
+[[keys.command]]
+key = "{{KEY_EDITOR_PRIMARY}}"
+type = "shell"
+command = '{{RUN}}open-editor.{{EXT}}{{RUNEND}} {{PRIMARY_EDITOR}}'
+description = "open in {{PRIMARY_EDITOR}}"
+
+[[keys.command]]
+key = "{{KEY_EDITOR_SECONDARY}}"
+type = "shell"
+command = '{{RUN}}open-editor.{{EXT}}{{RUNEND}} {{SECONDARY_EDITOR}}'
+description = "open in {{SECONDARY_EDITOR}}"
+# <<< module:editors
+
+# >>> module:review
+[[keys.command]]
+key = "{{KEY_REVIEW}}"
+type = "popup"
+command = '{{RUN}}review.{{EXT}}{{RUNEND}}'
+description = "agent review of the diff"
+width = "90%"
+height = "85%"
+# <<< module:review
+
+# >>> module:agent-autostart
+[[keys.command]]
+key = "{{KEY_AGENT_HERE}}"
+type = "plugin_action"
+command = "{{PLUGIN_ID}}.agent-here"
+description = "start agent in this pane"
+
+[[keys.command]]
+key = "{{KEY_DEV_LAYOUT}}"
+type = "plugin_action"
+command = "{{PLUGIN_ID}}.dev-layout"
+description = "dev layout"
+# <<< module:agent-autostart
+
+# >>> module:status-bar
+[[keys.command]]
+key = "{{KEY_ATTENTION}}"
+type = "plugin_action"
+command = "{{PLUGIN_ID}}.attention-view"
+description = "only agents waiting on me"
+# <<< module:status-bar
+
+[[keys.command]]
+key = "{{KEY_LAZYGIT}}"
+type = "popup"
+command = "lazygit"
+description = "lazygit"
+width = "92%"
+height = "88%"
+
+# ----------------------------------------------------------------------------
+# UI
+# ----------------------------------------------------------------------------
+[ui]
+accent = "{{ACCENT}}"
+status_indicators = "symbols"
+show_agent_labels_on_pane_borders = true
+window_title = "{workspace} - {terminal_title}"
+{{#win}}
+# "auto" draws herdr's own cursor on native Windows, which is steadier under
+# ConPTY. Switch to "native" if you use an IME or dislike the drawn cursor.
+host_cursor = "auto"
+{{/win}}
+
+# >>> module:status-bar
+tab_bar_right = [
+  { type = "zoom" },
+  # Only `command`, `interval_seconds` and `timeout_seconds` are accepted here.
+  { type = "command", command = '{{RUN}}status.{{EXT}}{{RUNEND}}', interval_seconds = 8, timeout_seconds = 5 },
+  { type = "datetime", format = "%H:%M" },
+]
+tab_bar_right_separator = " - "
+# <<< module:status-bar
+
+[ui.sidebar.spaces]
+row_gap = 0
+# >>> module:sidebar-tokens
+# The built-in "git_status" is deliberately LEFT OUT - it counts changed files via
+# `git status --porcelain --untracked-files=all`, i.e. the same thing as the tokens
+# below but lumped together, and the two numbers then disagree. Split instead:
+#   ~N  = modified tracked files
+#   ?N  = untracked files
+#   ^N/vN = ahead / behind upstream (kept fresh by auto-fetch)
+rows = [
+  ["state_icon", "workspace"],
+  ["branch",
+   { token = "$mod",       fg = "{{COLOR_MOD}}" },
+   { token = "$untracked", fg = "{{COLOR_UNTRACKED}}" },
+   { token = "$sync",      fg = "{{COLOR_SYNC}}" }],
+]
+# <<< module:sidebar-tokens
+{{#no-sidebar-tokens}}
+rows = [
+  ["state_icon", "workspace"],
+  ["branch", "git_status"],
+]
+{{/no-sidebar-tokens}}
+
+# Agent rows are washed out by contextual dimming, so every token sets dim = false.
+#
+# NOTE: fg is deliberately NOT set on state_icon and state_text. herdr colours them
+# by agent state (working, idle, blocked) and an explicit fg would override that
+# information. An omitted field keeps the contextual default, so bold + dim = false
+# emphasises without losing the state colour.
+#
+# Supported token fields are ONLY: token, fg, bold, dim. There is no bg, no italic,
+# and no alignment of any kind - rows must be a sequence and no spacer token exists.
+# Putting state_text right after state_icon is what keeps it in a fixed column.
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  [{ token = "state_icon", bold = true, dim = false },
+   { token = "workspace",  fg = "{{ACCENT}}", bold = true, dim = false },
+   { token = "tab",        dim = false }],
+  [{ token = "state_text", bold = true, dim = false },
+   { token = "agent",      fg = "{{COLOR_AGENT}}", dim = false }],
+]
+
+[ui.sidebar.agents.rows_by_agent]
+{{AGENT_KIND}} = [
+  [{ token = "state_icon", bold = true, dim = false },
+   { token = "state_text", bold = true, dim = false },
+   { token = "agent",      fg = "{{COLOR_AGENT}}", bold = true, dim = false }],
+  [{ token = "terminal_title_stripped", fg = "{{COLOR_TITLE}}", dim = false }],
+  [{ token = "workspace",  fg = "{{ACCENT}}", bold = true, dim = false },
+   { token = "tab",        dim = false }],
+]
+
+[ui.toast]
+# "system" has no OS notification service inside WSL - use "terminal" there and let
+# Windows Terminal highlight the tab.
+delivery = "{{TOAST_DELIVERY}}"
+delay_seconds = 2
+
+[ui.toast.herdr]
+position = "bottom-right"
+
+[ui.sound]
+enabled = true
+
+[ui.sound.agents]
+{{AGENT_KIND}} = "on"
