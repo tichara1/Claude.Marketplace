@@ -5,12 +5,5 @@
   "owner": {
     "name": "tichara1"
   },
-  "plugins": [
-    {
-      "name": "split-pr",
-      "description": "Split a large feature branch into multiple smaller PRs by architectural layer (contracts, tests, infrastructure, application, pipelines) with Azure DevOps integration",
-      "category": "productivity",
-      "source": "./plugins/split-pr"
-    }
-  ]
+  "plugins": []
 }

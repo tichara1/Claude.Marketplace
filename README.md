@@ -10,8 +10,4 @@ Personal Claude Code plugin marketplace.
 
 ## Plugins
 
-### split-pr
-
-Split a large feature branch into multiple smaller PRs by architectural layer (contracts, tests, infrastructure, application, pipelines) with Azure DevOps integration.
-
-**Usage:** `/split-pr`
+_None yet._
